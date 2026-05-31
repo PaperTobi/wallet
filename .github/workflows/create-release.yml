@@ -46,33 +46,6 @@ jobs:
           name: changelog
           path: changelog
 
-  prepare-release-notes:
-    name: Prepare Release Notes
-    needs:
-      - read-version
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-      - name: Prepare Google Play release notes
-        run: |
-          mkdir -p whatsnew
-          for locale_dir in fastlane/metadata/android/*; do
-            locale=$(basename "$locale_dir")
-
-            changelog_file="$locale_dir/changelogs/${{ needs.read-version.outputs.version_code }}.txt"
-            if [ -f "$changelog_file" ]; then
-              cp "$changelog_file" "whatsnew/whatsnew-$locale"
-              echo "Prepared changelog for $locale"
-            else
-              echo "Changelog file $changelog_file for $locale not found, skipping"
-            fi
-          done
-      - name: Upload Whats new
-        uses: actions/upload-artifact@v7
-        with:
-          name: whatsnew
-          path: whatsnew
-
   build-apk:
     name: Build Release Apk
     runs-on: ubuntu-latest
@@ -102,36 +75,6 @@ jobs:
         with:
           name: apk
           path: app/build/outputs/apk/release
-
-  build-bundle:
-    name: Build Release Bundle
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-      - name: Copy CI gradle.properties
-        run: mkdir -p ~/.gradle ; cp .github/ci-gradle.properties ~/.gradle/gradle.properties
-      - name: Decode Keystore
-        env:
-          ENCODED_STRING: ${{ secrets.KEYSTORE }}
-        run: |
-          echo $ENCODED_STRING | base64 -di > "${RUNNER_TEMP}"/keystore.jks
-      - uses: actions/setup-java@v5
-        with:
-          distribution: temurin
-          java-version: 17
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v6
-      - name: Test and Bundle Release
-        run: ./gradlew testDebugUnitTest bundleRelease
-        env:
-          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-          SIGNING_KEY_ALIAS: ${{ secrets.SIGNING_KEY_ALIAS }}
-          SIGNING_KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD }}
-      - name: Upload Bundle
-        uses: actions/upload-artifact@v7
-        with:
-          name: aab
-          path: app/build/outputs/bundle/release
 
   release:
     name: Release Apk
