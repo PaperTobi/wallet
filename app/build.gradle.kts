@@ -45,8 +45,8 @@ android {
         applicationId = "com.fivius.wallet"
         minSdk = 28
         targetSdk = 37
-        versionCode = 111
-        versionName = "0.46.1"
+        versionCode = 1
+        versionName = "0.0.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
