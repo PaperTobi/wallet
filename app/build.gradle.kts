@@ -42,7 +42,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "nz.eloque.foss_wallet"
+        applicationId = "com.fivius.wallet"
         minSdk = 28
         targetSdk = 37
         versionCode = 111
