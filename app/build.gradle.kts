@@ -33,7 +33,7 @@ android {
             keyAlias = System.getenv("SIGNING_KEY_ALIAS")
         }
     }
-    namespace = "nz.eloque.foss_wallet"
+    namespace = "com.fivius.wallet"
     compileSdk = 37
 
     buildFeatures {
