@@ -1,3 +1,0 @@
-* Add italian translation
-* Update german translation
-* Add home-screen shortcut creation for individual passes

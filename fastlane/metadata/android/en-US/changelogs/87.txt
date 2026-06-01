@@ -1,4 +1,0 @@
-* Improve barcode validation in creator
-* Add turkish translation
-* Update translations
-* Fix some barcodes not being rendered

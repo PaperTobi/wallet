@@ -1,1 +1,0 @@
-* Fixar a orientação na visualização de passagem

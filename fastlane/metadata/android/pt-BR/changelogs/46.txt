@@ -1,1 +1,0 @@
-* Ignorar campos primários vazios em passes genéricos

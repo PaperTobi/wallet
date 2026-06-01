@@ -1,3 +1,0 @@
-* Adicionar tradução para o italiano
-* Atualizar tradução para o alemão
-* Adicionar a criação de atalhos na tela inicial para passes individuais

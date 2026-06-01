@@ -1,1 +1,0 @@
-* Corrigir um problema que impedia que alguns cartões de embarque fossem exibidos corretamente

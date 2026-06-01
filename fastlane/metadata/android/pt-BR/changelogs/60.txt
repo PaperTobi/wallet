@@ -1,2 +1,0 @@
-* Adicionar animação de carregamento ao botão de atualização
-* Atualizar traduções

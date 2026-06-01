@@ -1,1 +1,0 @@
-MD3-App zur Passverwaltung von "Apple Passbook (.pkpass)"-Dateien

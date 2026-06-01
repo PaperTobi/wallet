@@ -1,2 +1,0 @@
-* Přidána integrace Gadgetbridge
-Poznámka: Vyžaduje Gadgetbridge >0.90

@@ -1,2 +1,0 @@
-* Širší vykreslení 1D lístků na šířku
-* Oprava odebrání lístků z archivu při obdržení aktualizace

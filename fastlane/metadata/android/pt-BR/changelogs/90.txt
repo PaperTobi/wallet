@@ -1,1 +1,0 @@
-* Corrigir a falha ao abrir o webview com a área de transferência vazia

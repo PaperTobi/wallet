@@ -1,2 +1,0 @@
-* Fix wrong insets on some screens
-* Fix sort options not being saved correctly

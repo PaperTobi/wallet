@@ -1,4 +1,0 @@
-* Os atalhos agora usam ícones adaptáveis
-* Visualização dos cartões de embarque aprimorada
-* Remoção do atalho de duplo clique para abrir o código de barras da carteira
-* Correção do tratamento incorreto do fuso horário

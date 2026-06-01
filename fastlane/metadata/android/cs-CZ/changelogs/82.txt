@@ -1,3 +1,0 @@
-* Vylepšen vzhled dlaždice rychlého nastavení
-* Implementována podpora pro pole lístků odkazující na jiné lokalizace
-* Aktualizovány překlady

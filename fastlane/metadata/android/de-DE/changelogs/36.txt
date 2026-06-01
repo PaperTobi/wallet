@@ -1,2 +1,0 @@
-* Tschechische Übersetzung hinzugefügt. Vielen Dank an Fjuro!
-* Wenn die Systemstandardsprache nicht in einem Pass enthalten ist, wird die englische Pass-Lokalisierung verwendet

@@ -1,1 +1,0 @@
-* Allow opened passes to be shown over the lock screen

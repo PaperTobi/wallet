@@ -1,3 +1,0 @@
-* Mírná aktualizace dopravních ikon na jízdenkách
-* Vylepšení rozpoznávání barvy pozadí vstupenek
-* Oprava problému, kdy automatická archivace odebrala některé lístky z archivu

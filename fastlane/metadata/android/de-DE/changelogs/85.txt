@@ -1,3 +1,0 @@
-* Unterstützung für Pass-Hintergründe in Hexadezimalzahlen hinzugefügt
-* Lettische Übersetzung hinzugefügt
-* Absturz beim Sortieren behoben

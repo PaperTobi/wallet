@@ -1,3 +1,0 @@
-* Improve quick settings tile design
-* Implement support for pass fields referencing other localizations
-* Update translations

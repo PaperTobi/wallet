@@ -1,3 +1,0 @@
-* Add support for pass backgrounds given in hex
-* Add latvian translation
-* Fix crash on sorting

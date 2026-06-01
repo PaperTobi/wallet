@@ -1,1 +1,0 @@
-* Exibir a imagem da fita se não houver campos de passe primários

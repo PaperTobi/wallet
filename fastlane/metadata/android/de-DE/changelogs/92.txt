@@ -1,3 +1,0 @@
-* Pässe lassen sich jetzt taggen
-* Die Suche/Filter UI wurde neu gestaltet
-* Fehler behoben, der die Suchleiste ausgeblendet hatte bis zum Neustart der App

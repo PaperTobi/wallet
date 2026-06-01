@@ -1,3 +1,0 @@
-* Updated translations
-* Build against Android 16 SDK
-* Add per app language support

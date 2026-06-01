@@ -1,4 +1,0 @@
-* Allow additional intents for pass opening
-* Add toast on duplicate pass import
-* Change clear filter icon
-* Update translations

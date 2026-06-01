@@ -1,3 +1,0 @@
-* Fix quick settings tile icon not being set persistently
-* Fix barcode loading regression
-

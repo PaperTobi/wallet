@@ -1,5 +1,0 @@
-* Add partial chinese translation
-* Update translations
-* Allow empty pass field labels
-* Updated license icon
-* Render barcode with encoding specified in pass
