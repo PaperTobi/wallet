@@ -29,23 +29,6 @@ jobs:
           echo "version_code=$VERSION_CODE" >> $GITHUB_OUTPUT
           echo "version_name=$VERSION_NAME" >> $GITHUB_OUTPUT
 
-  prepare-changelog:
-    name: Prepare Changelog
-    needs:
-      - read-version
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-      - name: Prepare Changelog
-        run: |
-          mkdir -p changelog
-          cp fastlane/metadata/android/en-US/changelogs/${{ needs.read-version.outputs.version_code }}.txt changelog/changelog.txt
-      - name: Upload Changelog
-        uses: actions/upload-artifact@v7
-        with:
-          name: changelog
-          path: changelog
-
   build-apk:
     name: Build Release Apk
     runs-on: ubuntu-latest
