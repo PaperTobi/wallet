@@ -63,6 +63,7 @@ jobs:
     name: Release Apk
     needs:
       - build-apk
+      - read-version
     runs-on: ubuntu-latest
     steps:
       - name: Download apk from build
