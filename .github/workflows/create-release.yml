@@ -63,7 +63,6 @@ jobs:
     name: Release Apk
     needs:
       - build-apk
-      - prepare-changelog
     runs-on: ubuntu-latest
     steps:
       - name: Download apk from build
