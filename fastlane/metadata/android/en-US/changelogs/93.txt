@@ -1,2 +1,0 @@
-* Allow empty values in imported fields
-* Show toast with airport name on long click of airport code

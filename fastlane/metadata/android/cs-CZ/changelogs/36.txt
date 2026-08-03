@@ -1,2 +1,0 @@
-* Add czech translation. Thanks to Fjuro!
-* Use english pass localization if system default locale is not contained in a pass

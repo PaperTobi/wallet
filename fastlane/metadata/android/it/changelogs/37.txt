@@ -1,1 +1,0 @@
-* Sistemate le interruzioni dell'app quando si aggiornava manualmente un biglietto senza una connessione di rete

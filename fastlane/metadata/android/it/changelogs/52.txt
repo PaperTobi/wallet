@@ -1,3 +1,0 @@
-* Traduzioni aggiornate
-* L'app è stata compilata usando le SDK di Android 16
-* Aggiunto il supporto per cambiare la lingua all'interno dell'app

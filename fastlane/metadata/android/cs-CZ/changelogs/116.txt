@@ -1,2 +1,0 @@
-* Opraven problém se zpracováním časových pásem
-* Opraveno několik chyb při analýze lokalizací

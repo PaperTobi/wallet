@@ -1,3 +1,0 @@
-* Atualizar ligeiramente os ícones que indicam o tipo de trânsito nos cartões de embarque
-* Melhorar a detecção da cor de fundo dos cartões
-* Corrigir o problema pelo qual o arquivamento automático desarquivava alguns cartões

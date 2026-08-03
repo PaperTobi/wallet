@@ -1,6 +1,0 @@
-* Alle enthaltenen Barcodes in den Pässen anzeigen
-* Zusätzliche Felder im Pass-Creator zulassen
-* Zusätzliche Links beim Import anklickbar machen
-* Ablauf zum Hinzufügen von Pässen überarbeitet
-* Teilen von Bildern zum Importieren zulassen
-* Passauswahl überarbeitet, sodass statt Wischen nun lange Klicks verwendet werden

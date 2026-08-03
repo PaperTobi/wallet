@@ -1,4 +1,0 @@
-* Polnische Übersetzung hinzugefügt
-* Gleitanimationen zwischen den Ansichten hinzugefügt
-* Link zu den Privatsphäre-Richtlinien der Info-Seite hinzugefügt 
-* Übersetzungen angepasst

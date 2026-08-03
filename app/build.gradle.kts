@@ -43,12 +43,11 @@ android {
     }
 
     defaultConfig {
-        applicationId = "nz.eloque.foss_wallet"
+        applicationId = "com.fivius.wallet"
         minSdk = 28
         targetSdk = 37
-        versionCode = 119
-        versionName = "0.49.1"
-
+        versionCode = 1
+        versionName = "0.0.1"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
             useSupportLibrary = true

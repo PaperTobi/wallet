@@ -1,3 +1,0 @@
-* Italienische Übersetzung hinzugefügt
-* Deutsche Übersetzung aktualisiert
-* Neue Funkion zum erstellen von Home-Screen Shortcuts für einzelne Pässe

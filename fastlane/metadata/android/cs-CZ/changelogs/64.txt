@@ -1,3 +1,0 @@
-* Finish hebrew translation
-* Update translations
-* Improve RTL language support

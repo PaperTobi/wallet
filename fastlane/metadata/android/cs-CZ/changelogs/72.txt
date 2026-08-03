@@ -1,4 +1,0 @@
-* Add support for .pkpasses files
-* Add export of all passes in settings
-* Add sort options for the pass list (time added, latest relevant date, oldest relevant date for now)
-* Update translations

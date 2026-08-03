@@ -1,1 +1,0 @@
-* Behebung eines Regressionsfehlers, der dazu führte, dass einige Bordkarten nicht korrekt angezeigt wurden

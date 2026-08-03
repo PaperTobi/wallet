@@ -1,1 +1,0 @@
-* Zpětné gesto v peněžence nyní zruší výběr lístků před zavřením aplikace

@@ -1,1 +1,0 @@
-* The back gesture in the wallet view now deselects passes before closing the app

@@ -1,1 +1,0 @@
-* Derive background color from logo if none is set in the pass

@@ -1,3 +1,0 @@
-* Symbole für den Transittyp auf Bordkarten wurden leicht aktualisiert
-* Erkennung der Hintergrundfarbe der Bordkarten wurde verbessert
-* Fehler behoben, durch den einige Bordkarten bei der automatischen Archivierung wiederhergestellt wurden

@@ -1,1 +1,0 @@
-* Voltar a usar uma versão mais antiga da dependência zxing para (espero) corrigir problemas no código Aztec

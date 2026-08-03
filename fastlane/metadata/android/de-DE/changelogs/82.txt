@@ -1,3 +1,0 @@
-* Design der Kachel für Schnellkonfigurationen verbessert
-* Unterstützung für Passfelder implementiert, die auf andere Lokalisierungen verweisen
-* Übersetzungen aktualisiert
