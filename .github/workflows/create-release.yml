@@ -2,10 +2,8 @@ name: Create Release
 
 on:
   push:
-    # Sequence of patterns matched against refs/tags
     tags:
-      - 'v*' # Push events to matching v*, i.e. v1.0, v20.15.10
-  # Allows you to run this workflow manually from the Actions tab
+      - "v*" # Push events to matching v*, i.e. v1.0, v20.15.10
   workflow_dispatch:
 
 jobs:
