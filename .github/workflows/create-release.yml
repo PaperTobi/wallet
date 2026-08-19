@@ -6,6 +6,13 @@ on:
       - "v*" # Push events to matching v*, i.e. v1.0, v20.15.10
   workflow_dispatch:
 
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   build-apk:
     name: Build Release Apk
@@ -42,6 +49,8 @@ jobs:
     needs:
       - build-apk
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Download apk from build
         uses: actions/download-artifact@v8
@@ -53,4 +62,3 @@ jobs:
         uses: softprops/action-gh-release@v3
         with:
           files: apk/app-release.apk
-
