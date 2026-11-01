@@ -1,4 +1,0 @@
-* Vom Benutzer installierte CA-Zertifikate werden akzeptiert
-* Alternativtexte für Barcodes werden lokalisiert
-* Weitere Freigabeziele wurden hinzugefügt
-* Helligkeit beim Durchblättern der Ausweise wurde korrigiert
