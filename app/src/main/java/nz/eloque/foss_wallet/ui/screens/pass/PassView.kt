@@ -10,7 +10,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Attachment
-import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -30,11 +29,11 @@ import nz.eloque.compose_kit.components.Section
 import nz.eloque.compose_kit.effect.ForceOrientation
 import nz.eloque.compose_kit.effect.Orientation
 import nz.eloque.compose_kit.picker.FilePicker
-import nz.eloque.compose_kit.settings.SettingsSwitch
 import nz.eloque.foss_wallet.R
 import nz.eloque.foss_wallet.model.Attachment
 import nz.eloque.foss_wallet.model.LocalizedPassWithTags
 import nz.eloque.foss_wallet.model.Pass
+import nz.eloque.foss_wallet.model.PassLink
 import nz.eloque.foss_wallet.model.PassMetadata
 import nz.eloque.foss_wallet.model.PassType
 import nz.eloque.foss_wallet.model.Tag
@@ -43,6 +42,7 @@ import nz.eloque.foss_wallet.model.field.PassField
 import nz.eloque.foss_wallet.persistence.BarcodePosition
 import nz.eloque.foss_wallet.ui.card.PassCard
 import nz.eloque.foss_wallet.ui.components.AttachmentList
+import nz.eloque.foss_wallet.ui.components.PassLinks
 import nz.eloque.foss_wallet.utils.prettyDateTime
 import java.time.Instant
 import java.time.ZoneId
@@ -60,14 +60,11 @@ fun PassView(
     onTagCreate: (Tag) -> Unit,
     barcodePosition: BarcodePosition,
     increaseFullscreenBrightness: Boolean,
-    onRenderingChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
     scrollBehavior: TopAppBarScrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(),
 ) {
     val pass = localizedPass.pass
     val metadata = localizedPass.metadata
-
-    val hasLegacyRepresentation = remember(pass.barCodes) { pass.barCodes.any { it.hasLegacyRepresentation() } }
     val context = LocalContext.current
     ForceOrientation(Orientation.Locked)
     Column(
@@ -83,7 +80,6 @@ fun PassView(
             barcode = {
                 Barcodes(
                     barcodes = pass.barCodes.toList(),
-                    legacyRendering = metadata.renderLegacy && hasLegacyRepresentation,
                     barcodePosition = barcodePosition,
                     increaseFullscreenBrightness = increaseFullscreenBrightness,
                 )
@@ -109,15 +105,13 @@ fun PassView(
             }
         }
 
-        if (hasLegacyRepresentation) {
-            Card {
-                SettingsSwitch(
-                    title = stringResource(R.string.compatibility_mode),
-                    checked = metadata.renderLegacy,
-                    onCheckedChange = onRenderingChange,
-                )
+        if (pass.additionalInfoFields.isNotEmpty()) {
+            Section(stringResource(R.string.additional_info)) {
+                BackFields(pass.additionalInfoFields)
             }
         }
+        PassLinks(remember(pass.links) { PassLink.of(pass.links) })
+
         Section(stringResource(R.string.attachments)) {
             AttachmentList(
                 attachments = localizedPass.attachments,
@@ -193,6 +187,10 @@ private fun PassPreview() {
                     PassField("data1", "data1", PassContent.Plain("Longer Value here i guess")),
                     PassField("data2", "data2", PassContent.Plain("Shorter Value")),
                 ),
+            additionalInfoFields =
+                mutableListOf(
+                    PassField("entry", "Entry", PassContent.Plain("Gate 3, opens 90 minutes before kick-off")),
+                ),
         )
     PassView(
         localizedPass = LocalizedPassWithTags(pass, PassMetadata(pass.id), allTags, listOf()),
@@ -202,7 +200,6 @@ private fun PassPreview() {
         onTagCreate = {},
         barcodePosition = BarcodePosition.Center,
         increaseFullscreenBrightness = false,
-        onRenderingChange = {},
         onAttachmentAdd = { _, _ -> },
         onAttachmentDelete = {},
     )

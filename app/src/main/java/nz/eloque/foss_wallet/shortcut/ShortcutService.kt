@@ -6,6 +6,7 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Canvas
 import android.graphics.Color
+import android.net.Uri
 import android.widget.Toast
 import androidx.annotation.StringRes
 import androidx.core.content.pm.ShortcutInfoCompat
@@ -80,7 +81,7 @@ class ShortcutService
             )
 
         private fun Pass.adaptiveIcon(): IconCompat? {
-            val bitmap = BitmapFactory.decodeFile(iconFile(context).path) ?: return null
+            val bitmap = BitmapFactory.decodeFile(iconFile(context)?.path ?: return null) ?: return null
             return IconCompat.createWithAdaptiveBitmap(wrapInAdaptiveBounds(bitmap))
         }
 
@@ -109,5 +110,8 @@ class ShortcutService
             const val SCHEME = "fosswallet"
             const val HOST = "pass"
             const val BASE_URI = "$SCHEME://$HOST"
+
+            /** The pass a shortcut [uri] points to, or null for any other uri. */
+            fun passId(uri: Uri?): String? = uri?.takeIf { it.scheme == SCHEME && it.host == HOST }?.pathSegments?.singleOrNull()
         }
     }

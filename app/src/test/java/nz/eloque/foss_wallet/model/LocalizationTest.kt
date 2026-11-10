@@ -15,16 +15,19 @@ class LocalizationTest {
         barCodes: Set<BarCode> = setOf(),
         description: String = "desc",
         primaryFields: List<PassField> = listOf(),
+        organization: String = "org",
+        logoText: String? = null,
     ): Pass =
         Pass(
             id = "pass-1",
             description = description,
             formatVersion = 1,
-            organization = "org",
+            organization = organization,
             serialNumber = "serial",
             type = PassType.Generic,
             barCodes = barCodes,
             addedAt = Instant.ofEpochMilli(0),
+            logoText = logoText,
             primaryFields = primaryFields,
         )
 
@@ -87,5 +90,54 @@ class LocalizationTest {
                 .prettyPrint(),
         )
         assertEquals("TICKET: 12345", localized.barCodes.single().altText)
+    }
+
+    @Test
+    fun `localizes organizationName and logoText`() {
+        val localized =
+            pass(organization = "orgKey", logoText = "logoKey").applyLocalization(
+                mapOf(
+                    "orgKey" to PassLocalization("pass-1", "en", "orgKey", "Railways"),
+                    "logoKey" to PassLocalization("pass-1", "en", "logoKey", "Rail"),
+                ),
+            )
+
+        assertEquals("Railways", localized.organization)
+        assertEquals("Rail", localized.logoText)
+    }
+
+    @Test
+    fun `localizes additionalInfoFields`() {
+        val localized =
+            pass()
+                .copy(additionalInfoFields = listOf(PassField("k", "labelKey", PassContent.Plain("valueKey"), "changeKey")))
+                .applyLocalization(
+                    mapOf(
+                        "labelKey" to PassLocalization("pass-1", "en", "labelKey", "Lounge"),
+                        "valueKey" to PassLocalization("pass-1", "en", "valueKey", "Gate B"),
+                        "changeKey" to PassLocalization("pass-1", "en", "changeKey", "Lounge moved to %@"),
+                    ),
+                ).additionalInfoFields
+                .single()
+
+        assertEquals("Lounge", localized.label)
+        assertEquals("Gate B", localized.content.prettyPrint())
+        assertEquals("Lounge moved to Gate B", localized.changeMessage)
+    }
+
+    @Test
+    fun `reports changed additionalInfoFields`() {
+        val old = pass().copy(additionalInfoFields = listOf(PassField("k", "Lounge", PassContent.Plain("Gate A"), "Moved to %@")))
+        val new = old.copy(additionalInfoFields = listOf(PassField("k", "Lounge", PassContent.Plain("Gate B"), "Moved to %@")))
+
+        assertEquals("k", new.updatedFields(old).single().key)
+    }
+
+    @Test
+    fun `leaves unmapped organizationName and absent logoText untouched`() {
+        val localized = pass(organization = "Railways").applyLocalization(mapOf())
+
+        assertEquals("Railways", localized.organization)
+        assertNull(localized.logoText)
     }
 }

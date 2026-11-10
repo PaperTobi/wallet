@@ -1,5 +1,6 @@
 package nz.eloque.foss_wallet.ui
 
+import androidx.navigation3.runtime.NavKey
 import com.google.zxing.BarcodeFormat
 import kotlinx.serialization.Serializable
 import nz.eloque.foss_wallet.model.BarCode
@@ -7,7 +8,7 @@ import java.nio.charset.Charset
 
 /** Every navigation destination of the app. */
 @Serializable
-sealed interface Route {
+sealed interface Route : NavKey {
     @Serializable
     data object Wallet : Route
 
@@ -28,6 +29,24 @@ sealed interface Route {
 
     @Serializable
     data object AdvancedAdd : Route
+
+    /** The common result screen for camera scans and imported image/PDF barcodes. */
+    @Serializable
+    data class ScanResult(
+        val format: String,
+        val message: String,
+        val encoding: String,
+        val altText: String? = null,
+    ) : Route {
+        constructor(barCode: BarCode) : this(
+            format = barCode.format.name,
+            message = barCode.message,
+            encoding = barCode.encoding.name(),
+            altText = barCode.altText,
+        )
+
+        fun toBarCode(): BarCode = Create(format, message, encoding, altText).toBarCode()!!
+    }
 
     /** The create screen, optionally prefilled with a scanned barcode. */
     @Serializable

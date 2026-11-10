@@ -12,11 +12,14 @@ private const val CHANGE_MESSAGE_FORMAT = "%@"
 fun Pass.applyLocalization(mapping: Map<String, PassLocalization>): Pass =
     copy(
         description = mapping[description]?.text ?: description,
+        organization = mapping[organization]?.text ?: organization,
+        logoText = mapping.localize(logoText),
         headerFields = headerFields.applyLocalization(mapping),
         primaryFields = primaryFields.applyLocalization(mapping),
         secondaryFields = secondaryFields.applyLocalization(mapping),
         auxiliaryFields = auxiliaryFields.applyLocalization(mapping),
         backFields = backFields.applyLocalization(mapping),
+        additionalInfoFields = additionalInfoFields.applyLocalization(mapping),
         barCodes = barCodes.applyLocalization(mapping),
     )
 

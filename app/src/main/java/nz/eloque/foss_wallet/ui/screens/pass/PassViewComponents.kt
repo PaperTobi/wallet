@@ -45,6 +45,7 @@ import nz.eloque.compose_kit.input.AbbreviatingText
 import nz.eloque.compose_kit.pager.HorizontalPagerIndicator
 import nz.eloque.foss_wallet.R
 import nz.eloque.foss_wallet.model.BarCode
+import nz.eloque.foss_wallet.model.field.DataDetectorType
 import nz.eloque.foss_wallet.model.field.PassField
 import nz.eloque.foss_wallet.persistence.BarcodePosition
 import nz.eloque.foss_wallet.ui.card.PassField
@@ -52,12 +53,11 @@ import nz.eloque.foss_wallet.ui.card.PassField
 @Composable
 fun Barcodes(
     barcodes: List<BarCode>,
-    legacyRendering: Boolean,
     barcodePosition: BarcodePosition,
     increaseFullscreenBrightness: Boolean,
     modifier: Modifier = Modifier,
 ) {
-    val bitmaps = remember(barcodes, legacyRendering) { barcodes.map { it.toBitmap(legacyRendering = legacyRendering) } }
+    val bitmaps = remember(barcodes) { barcodes.map { it.toBitmap() } }
     val pagerState = rememberPagerState { barcodes.size }
     val coroutineScope = rememberCoroutineScope()
     var fullscreenPage by remember { mutableStateOf<Int?>(null) }
@@ -234,6 +234,7 @@ fun BackFields(fields: List<PassField>) {
                 field = it,
                 maxLines = Int.MAX_VALUE,
                 style = MaterialTheme.typography.bodyLarge,
+                dataDetectorTypes = it.dataDetectorTypes ?: DataDetectorType.entries.toSet(),
             )
         }
     }

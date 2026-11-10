@@ -24,6 +24,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
@@ -36,7 +37,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
-import coil.compose.AsyncImage
+import coil3.compose.AsyncImage
 import nz.eloque.foss_wallet.R
 import nz.eloque.foss_wallet.model.LocalizedPassWithTags
 import nz.eloque.foss_wallet.model.PassColors
@@ -92,6 +93,7 @@ fun PassCard(
     PassCardBase(
         colors = pass.colors ?: PassColors.Fallback,
         shape = shape,
+        dimmed = pass.voided,
         footer = {
             PassCardFooter(
                 localizedPass = localizedPass,
@@ -106,10 +108,16 @@ fun PassCard(
         modifier = modifier,
         onClick = onClick,
         onLongClick = onLongClick,
-        backgroundImage = if (pass.type is PassType.Event && !pass.hasStrip) pass.backgroundFile(context) else null,
+        backgroundImage =
+            if (pass.type is PassType.Event && !pass.hasStrip) {
+                remember(localizedPass) { pass.backgroundFile(context) }
+            } else {
+                null
+            },
     ) {
         HeaderRow(
             pass = pass,
+            logo = remember(localizedPass) { pass.logoFile(context) },
             modifier = horizontalPaddingModifier,
             isSelectable = showEntirePass,
         )
@@ -119,24 +127,24 @@ fun PassCard(
             PassType.Event if pass.hasStrip -> {
                 StripImagePrimary(
                     primaryFields = listOf(),
-                    stripImage = pass.stripFile(context),
+                    stripImage = remember(localizedPass) { pass.stripFile(context) },
                     modifier = Modifier.height(90.dp),
                     isSelectable = showEntirePass,
                 )
-                passFields = listOf(pass.secondaryFields, pass.auxiliaryFields)
+                passFields = listOf(pass.secondaryFields) + pass.auxiliaryRows()
             }
 
             is PassType.Generic, PassType.Event -> {
                 ThumbnailPrimary(
                     primaryFields = pass.primaryFields,
-                    thumbnail = pass.thumbnailFile(context),
+                    thumbnail = remember(localizedPass) { pass.thumbnailFile(context) },
                     modifier = horizontalPaddingModifier.height(90.dp),
                     secondaryFields = if (pass.type is PassType.Event) pass.secondaryFields else null,
                     isSelectable = showEntirePass,
                 )
                 passFields =
                     if (pass.type is PassType.Event) {
-                        listOf(pass.auxiliaryFields)
+                        pass.auxiliaryRows()
                     } else {
                         listOf(pass.secondaryFields, pass.auxiliaryFields)
                     }
@@ -160,7 +168,7 @@ fun PassCard(
             is PassType.Coupon, PassType.StoreCard -> {
                 StripImagePrimary(
                     primaryFields = pass.primaryFields,
-                    stripImage = pass.stripFile(context),
+                    stripImage = remember(localizedPass) { pass.stripFile(context) },
                     modifier = Modifier.height(150.dp),
                     isSelectable = showEntirePass,
                 )
@@ -182,7 +190,7 @@ fun PassCard(
             ) {
                 if (pass.type is PassType.Boarding && pass.hasFooter) {
                     AsyncImage(
-                        model = pass.footerFile(context),
+                        model = remember(localizedPass) { pass.footerFile(context) },
                         contentDescription = stringResource(R.string.image),
                         modifier = Modifier.height(16.dp),
                     )
@@ -202,6 +210,7 @@ private fun PassCardBase(
     onClick: (() -> Unit)? = null,
     onLongClick: (() -> Unit)? = null,
     backgroundImage: File? = null,
+    dimmed: Boolean = false,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val fixedDensity = DisplayMetrics.DENSITY_DEVICE_STABLE.toFloat() / DisplayMetrics.DENSITY_DEFAULT
@@ -212,7 +221,7 @@ private fun PassCardBase(
         LocalPassLabelColor provides colors.label,
     ) {
         Surface(
-            modifier = modifier,
+            modifier = if (dimmed) modifier.alpha(DIMMED_ALPHA) else modifier,
             shape = shape,
             color = colors.background,
             contentColor = colors.foreground,
@@ -245,3 +254,5 @@ private fun PassCardBase(
         }
     }
 }
+
+private const val DIMMED_ALPHA = 0.5f

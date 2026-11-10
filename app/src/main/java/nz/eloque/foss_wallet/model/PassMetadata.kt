@@ -1,9 +1,9 @@
 package nz.eloque.foss_wallet.model
 
-import androidx.room.Entity
-import androidx.room.ForeignKey
-import androidx.room.Index
-import androidx.room.PrimaryKey
+import androidx.room3.Entity
+import androidx.room3.ForeignKey
+import androidx.room3.Index
+import androidx.room3.PrimaryKey
 import java.time.Instant
 import java.util.UUID
 
@@ -33,7 +33,6 @@ data class PassMetadata(
     val groupId: Long? = null,
     val archived: Boolean = false,
     val autoArchive: Boolean = true,
-    val renderLegacy: Boolean = false,
     val updatedAt: Instant? = null,
     val registeredDeviceId: UUID? = null,
 )

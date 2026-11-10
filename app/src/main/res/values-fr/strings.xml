@@ -62,7 +62,6 @@
     <string name="pass_view">Vue de la carte</string>
     <string name="pass_deleted">Carte supprimée avec succès</string>
     <string name="pass_imported">Carte importée avec succès</string>
-    <string name="compatibility_mode">Mode compatibilité</string>
     <string name="webview">Ouvrir l\'URL</string>
     <string name="create_pass">Créer une carte</string>
     <string name="pass_name">Nom de la carte</string>
@@ -78,7 +77,6 @@
     <string name="help_translate">Aider à traduire</string>
     <string name="clear_selection">Effacer la sélection</string>
     <string name="barcode_value_invalid">Cette valeur n\'est pas un code %1$s valide</string>
-    <string name="choose_image">Choisir une image</string>
     <string name="event">Billet d\'évènement</string>
     <string name="add_tag">Ajouter un mot-clé</string>
     <string name="remove_tag">Retirer un mot-clé</string>
@@ -86,7 +84,6 @@
     <string name="collapse">Replier</string>
     <string name="expand">Déplier</string>
     <string name="tag_label">Mot-clé</string>
-    <string name="no_barcode_found">Pas de code-barre trouvé</string>
     <string name="select_image_with_barcode">Choisir une image avec un code-barre</string>
     <string name="no_calendar_app_found">Pas d\'application d\'agenda détectée</string>
     <string name="no_map_app_found">Pas d\'application de cartographie détectée</string>

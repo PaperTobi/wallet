@@ -1,22 +1,27 @@
 package nz.eloque.foss_wallet.parsing
 
 import android.content.Context
-import android.location.Location
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.ui.graphics.Color
 import androidx.core.graphics.toColorInt
+import com.google.zxing.BarcodeFormat
 import nz.eloque.foss_wallet.R
 import nz.eloque.foss_wallet.model.BarCode
 import nz.eloque.foss_wallet.model.Pass
+import nz.eloque.foss_wallet.model.PassBeacon
 import nz.eloque.foss_wallet.model.PassColors
+import nz.eloque.foss_wallet.model.PassImages
+import nz.eloque.foss_wallet.model.PassLink
+import nz.eloque.foss_wallet.model.PassLocation
 import nz.eloque.foss_wallet.model.PassRelevantDate
 import nz.eloque.foss_wallet.model.PassType
 import nz.eloque.foss_wallet.model.TransitType
+import nz.eloque.foss_wallet.model.decodeBitmap
 import nz.eloque.foss_wallet.model.field.PassField
 import nz.eloque.foss_wallet.persistence.loader.InvalidPassException
-import nz.eloque.foss_wallet.persistence.loader.PassBitmaps
 import nz.eloque.foss_wallet.utils.Hash
+import nz.eloque.foss_wallet.utils.doubleOrNull
 import nz.eloque.foss_wallet.utils.forEach
 import nz.eloque.foss_wallet.utils.map
 import org.json.JSONException
@@ -29,11 +34,12 @@ import java.util.UUID
 
 class PassParser(
     val context: Context? = null,
+    private val onBarcodeFormatFallback: (String) -> Unit = {},
 ) {
     fun parse(
         passJson: JSONObject,
         overridingId: String? = null,
-        bitmaps: PassBitmaps,
+        images: PassImages,
         addedAt: Instant = Instant.now(),
         deviceId: UUID = UUID.randomUUID(),
     ): Pass {
@@ -75,17 +81,7 @@ class PassParser(
                 else -> PassType.Generic
             }
 
-        val locations =
-            if (passJson.has("locations")) {
-                passJson.getJSONArray("locations").map { locJson ->
-                    Location("").also {
-                        it.latitude = locJson.getDouble("latitude")
-                        it.longitude = locJson.getDouble("longitude")
-                    }
-                }
-            } else {
-                listOf()
-            }
+        val locations = passJson.optJSONArray("locations")?.map { PassLocation.fromJson(it) } ?: listOf()
 
         val fieldContainer = passJson.optJSONObject(type.jsonKey)
 
@@ -96,29 +92,42 @@ class PassParser(
             organization = organizationName,
             serialNumber = serialNumber,
             type = type,
-            colors = parsePassColors(passJson) ?: bitmaps.logo.derivePassColors(),
+            colors = parsePassColors(passJson) ?: images.first("logo")?.decodeBitmap().derivePassColors(),
             barCodes = parseBarcodes(passJson),
-            hasLogo = bitmaps.logo != null,
-            hasStrip = bitmaps.strip != null,
-            hasThumbnail = bitmaps.thumbnail != null,
-            hasFooter = bitmaps.footer != null,
-            hasBackground = bitmaps.background != null,
             addedAt = addedAt,
             deviceId = deviceId,
             relevantDates = parseRelevantDates(passJson),
             expirationDate = parseExpiration(passJson),
-            logoText = passJson.stringOrNull("logoText"),
+            voided = passJson.optBoolean("voided"),
+            logoText = passJson.stringOrNull("logoText") ?: passJson.stringOrNull("eventLogoText"),
             authToken = passJson.stringOrNull("authenticationToken"),
             webServiceUrl = passJson.stringOrNull("webServiceURL"),
             passTypeIdentifier = passJson.stringOrNull("passTypeIdentifier"),
             locations = locations,
+            beacons = parseBeacons(passJson),
+            maxDistance = passJson.doubleOrNull("maxDistance"),
+            links = PassLink.entries.mapNotNull { link -> passJson.stringOrNull(link.key)?.let { link.key to it } }.toMap(),
             headerFields = fieldContainer?.collectFields("headerFields") ?: listOf(),
             primaryFields = fieldContainer?.collectFields("primaryFields") ?: listOf(),
             secondaryFields = fieldContainer?.collectFields("secondaryFields") ?: listOf(),
             auxiliaryFields = fieldContainer?.collectFields("auxiliaryFields") ?: listOf(),
             backFields = fieldContainer?.collectFields("backFields") ?: listOf(),
-        )
+            additionalInfoFields = fieldContainer?.collectFields("additionalInfoFields") ?: listOf(),
+        ).withImages(images)
     }
+
+    private fun parseBeacons(passJson: JSONObject): List<PassBeacon> =
+        passJson
+            .optJSONArray("beacons")
+            ?.map { beaconJson ->
+                try {
+                    PassBeacon.fromJson(beaconJson)
+                } catch (e: JSONException) {
+                    Log.w(TAG, "Skipping invalid beacon: $e")
+                    null
+                }
+            }?.filterNotNull()
+            ?: listOf()
 
     private fun parseRelevantDate(passJson: JSONObject): PassRelevantDate? =
         try {
@@ -202,8 +211,11 @@ class PassParser(
             null
         } else {
             val barcodeFormat = BarCode.formatFromString(barcodeFormatString)
+            if (barcodeFormat == null) {
+                onBarcodeFormatFallback(barcodeFormatString)
+            }
             BarCode(
-                barcodeFormat,
+                barcodeFormat ?: BarcodeFormat.QR_CODE,
                 barcodeJSON.getString("message"),
                 Charset.forName(barcodeJSON.optString("messageEncoding", BarCode.FALLBACK_CHARSET.toString())),
                 barcodeJSON.stringOrNull("altText"),
@@ -262,5 +274,8 @@ class PassParser(
 
     companion object {
         private const val TAG = "PassParser"
+
+        /** Bump when the parser reads new data, so stored passes are re-parsed from their originals on the next start. */
+        const val VERSION = 1
     }
 }

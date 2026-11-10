@@ -1,12 +1,14 @@
 package nz.eloque.foss_wallet.model.field
 
+import android.icu.util.ULocale
 import nz.eloque.foss_wallet.parsing.TimeParser
 import nz.eloque.foss_wallet.utils.inIgnoreCase
-import nz.eloque.foss_wallet.utils.linkify
 import nz.eloque.foss_wallet.utils.prettyDate
 import nz.eloque.foss_wallet.utils.prettyDateTime
 import nz.eloque.foss_wallet.utils.prettyTime
+import java.text.NumberFormat
 import java.time.format.FormatStyle
+import java.util.Locale
 
 sealed class PassContent(
     val id: Int,
@@ -16,7 +18,7 @@ sealed class PassContent(
     ) : PassContent(PLAIN) {
         override fun contains(query: String) = query inIgnoreCase text
 
-        override fun prettyPrint(): String = linkify(text)
+        override fun prettyPrint(): String = text
 
         override fun isEmpty(): Boolean = text.isEmpty()
     }
@@ -27,18 +29,33 @@ sealed class PassContent(
     ) : PassContent(CURRENCY) {
         override fun contains(query: String) = query inIgnoreCase amount || query inIgnoreCase currency
 
-        override fun prettyPrint(): String = amount + toCurrency(currency)
+        override fun prettyPrint(): String = format(Locale.getDefault())
 
         override fun isEmpty(): Boolean = amount.isEmpty()
 
-        private fun toCurrency(currencyCode: String): String? =
-            try {
-                java.util.Currency
-                    .getInstance(currency)
-                    .symbol
+        fun format(locale: Locale): String {
+            val number = amount.trim().toBigDecimalOrNull() ?: return "$amount $currency"
+            val currencyFormat = NumberFormat.getCurrencyInstance(locale)
+            return try {
+                currencyFormat.currency = java.util.Currency.getInstance(currency)
+                currencyFormat.format(number)
             } catch (_: IllegalArgumentException) {
-                " $currencyCode"
+                "${NumberFormat.getNumberInstance(locale).format(number)} $currency"
             }
+        }
+    }
+
+    data class Numeric(
+        val value: String,
+        val style: NumberStyle,
+    ) : PassContent(NUMERIC) {
+        override fun contains(query: String) = query inIgnoreCase value || query inIgnoreCase prettyPrint()
+
+        override fun prettyPrint(): String = format(ULocale.getDefault())
+
+        override fun isEmpty(): Boolean = value.isEmpty()
+
+        fun format(locale: ULocale): String = value.toBigDecimalOrNull()?.let { style.format(it, locale) } ?: value
     }
 
     data class Date(
@@ -83,6 +100,7 @@ sealed class PassContent(
         const val DATE = 2
         const val TIME = 3
         const val DATE_TIME = 4
+        const val NUMERIC = 5
 
         fun deserialize(content: String): PassContent {
             if (content.length < 2 || !content[0].isDigit() || content[1] != '|') {
@@ -94,6 +112,7 @@ sealed class PassContent(
             return when (id) {
                 CURRENCY -> Currency(components[0], components.getOrElse(1) { "" })
                 DATE, TIME, DATE_TIME -> components.toTemporal(id) ?: Plain(body)
+                NUMERIC -> components.toNumeric() ?: Plain(body)
                 else -> Plain(body)
             }
         }
@@ -109,6 +128,12 @@ sealed class PassContent(
             }
         }
 
+        private fun List<String>.toNumeric(): Numeric? {
+            val value = getOrNull(0) ?: return null
+            val style = getOrNull(1)?.let { name -> NumberStyle.entries.firstOrNull { it.name == name } } ?: return null
+            return Numeric(value, style)
+        }
+
         private fun String.toFormatStyleOrNull(): FormatStyle? =
             try {
                 FormatStyle.valueOf(this)
@@ -121,6 +146,7 @@ sealed class PassContent(
         when (this) {
             is Plain -> "$id|$text"
             is Currency -> "$id|$amount|$currency"
+            is Numeric -> "$id|$value|${style.name}"
             is Date -> temporal(date, format, isRelative)
             is Time -> temporal(time, format, isRelative)
             is DateTime -> temporal(dateTime, format, isRelative)

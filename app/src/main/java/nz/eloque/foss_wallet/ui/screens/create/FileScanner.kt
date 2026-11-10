@@ -1,12 +1,7 @@
 package nz.eloque.foss_wallet.ui.screens.create
 
-import android.content.ContentResolver
 import android.graphics.Bitmap
-import android.graphics.ImageDecoder
-import android.graphics.Matrix
-import android.graphics.pdf.PdfRenderer
-import android.net.Uri
-import androidx.core.graphics.createBitmap
+import android.graphics.Point
 import com.google.zxing.BarcodeFormat
 import nz.eloque.foss_wallet.model.BarCode
 import zxingcpp.BarcodeReader
@@ -31,11 +26,13 @@ object FileScanner {
             ),
         )
 
+    /** A decoded barcode. [unsupportedFormat] names the scanned format when [format] is a QR fallback for it. */
     data class ScanResult(
         val message: String,
         val format: BarcodeFormat,
         val encoding: Charset,
         val altText: String?,
+        val unsupportedFormat: String? = null,
     ) {
         fun toBarCode(): BarCode =
             BarCode(
@@ -62,72 +59,25 @@ object FileScanner {
         }
     }
 
-    fun scanFrom(
-        contentResolver: ContentResolver,
-        uri: Uri,
-        scanSource: ScanSource,
-    ): ScanResult? =
-        when (scanSource) {
-            ScanSource.Image -> scanFromImage(contentResolver, uri)
-            ScanSource.Pdf -> scanFromPdf(contentResolver, uri)
+    /** A decoded barcode with its corners in the scanned bitmap's coordinates. */
+    data class Detection(
+        val result: ScanResult,
+        val corners: List<Point>,
+    )
+
+    @Synchronized
+    fun detect(bitmap: Bitmap): Detection? =
+        barcodeReader.read(bitmap).firstNotNullOfOrNull { found ->
+            found.toScanResult()?.let { result ->
+                with(found.position) { Detection(result, listOf(topLeft, topRight, bottomRight, bottomLeft)) }
+            }
         }
 
-    fun scanFromPdf(
-        contentResolver: ContentResolver,
-        uri: Uri,
-    ): ScanResult? =
-        contentResolver.openFileDescriptor(uri, "r")?.use { descriptor ->
-            PdfRenderer(descriptor).use { renderer ->
-                for (i in 0 until renderer.pageCount) {
-                    renderer.openPage(i).use { page ->
-                        val scale = 3f // Increase for better QR detection
-
-                        val width = (page.width * scale).toInt()
-                        val height = (page.height * scale).toInt()
-
-                        val bitmap = createBitmap(width, height)
-
-                        val matrix =
-                            Matrix().apply {
-                                postScale(scale, scale)
-                            }
-
-                        page.render(
-                            bitmap,
-                            null,
-                            matrix,
-                            PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY,
-                        )
-
-                        val scanResult = scanFrom(bitmap)
-                        if (scanResult != null) {
-                            return scanResult
-                        }
-                    }
-                }
-            }
-
-            return null
-        }
-
-    fun scanFromImage(
-        contentResolver: ContentResolver,
-        uri: Uri,
-    ): ScanResult? {
-        val source = ImageDecoder.createSource(contentResolver, uri)
-        val bitmap =
-            ImageDecoder.decodeBitmap(source) { decoder, info, source ->
-                decoder.allocator = ImageDecoder.ALLOCATOR_SOFTWARE
-                decoder.isMutableRequired = false
-            }
-        return scanFrom(bitmap)
-    }
-
-    fun scanFrom(bitmap: Bitmap): ScanResult? = barcodeReader.read(bitmap).firstOrNull()?.toScanResult()
-
-    /** Converts a zxing-cpp result, returning null for formats the app cannot render. */
+    /** Converts a zxing-cpp result, falling back to QR for formats the app cannot render. */
     fun BarcodeReader.Result.toScanResult(): ScanResult? {
-        val format = BarcodeFormat.entries.firstOrNull { it.name == format.name } ?: return null
-        return ScanResult.fromDecoded(text, bytes, contentType, format)
+        val renderable = BarCode.formatFromString(format.name)
+        return ScanResult
+            .fromDecoded(text, bytes, contentType, renderable ?: BarcodeFormat.QR_CODE)
+            ?.copy(unsupportedFormat = format.name.takeIf { renderable == null })
     }
 }

@@ -1,0 +1,76 @@
+package nz.eloque.foss_wallet.ui.screens.scan
+
+import androidx.compose.material3.Text
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.test.junit4.v2.createComposeRule
+import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
+import com.google.zxing.BarcodeFormat
+import nz.eloque.foss_wallet.model.BarCode
+import org.junit.Assert.assertEquals
+import org.junit.Rule
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.mockito.Mockito.mock
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
+
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [34])
+class ScanResultTest {
+    @get:Rule
+    val composeRule = createComposeRule()
+
+    @Test
+    fun `imported boarding barcode offers boarding pass creation and manual entry`() {
+        val barcode =
+            BarCode(
+                BarcodeFormat.QR_CODE,
+                "M1DOE/JANE            EEXAMPL1BUDLHRXY 00123284Y012A00001100",
+                Charsets.UTF_8,
+                null,
+            )
+        showResult(barcode)
+        composeRule.onNodeWithText("Create Boarding Pass").assertExists()
+        composeRule.onNodeWithText("Manual entry").performClick()
+        composeRule.onNodeWithText("Manual editor").assertExists()
+    }
+
+    @Test
+    fun `imported URL offers opening the website`() {
+        showResult(BarCode(BarcodeFormat.QR_CODE, "https://example.org/ticket?a=1&b=2", Charsets.UTF_8, null))
+        composeRule.onNodeWithText("Create Boarding Pass").assertDoesNotExist()
+        composeRule.onNodeWithText("Open URL").assertExists()
+    }
+
+    @Test
+    fun `ordinary barcode offers manual entry without boarding suggestion`() {
+        showResult(BarCode(BarcodeFormat.CODE_128, "LOYALTY-12345", Charsets.UTF_8, null))
+        composeRule.onNodeWithText("Create Boarding Pass").assertDoesNotExist()
+        composeRule.onNodeWithText("Manual entry").assertExists()
+    }
+
+    private fun showResult(barcode: BarCode) {
+        val viewModel = mock(ScanViewModel::class.java)
+        var manualEntry by mutableStateOf<BarCode?>(null)
+        composeRule.setContent {
+            val entered = manualEntry
+            if (entered == null) {
+                ScanView(
+                    scanViewModel = viewModel,
+                    onScanned = {},
+                    onCancelled = {},
+                    onPassCreated = {},
+                    onOpenUrl = {},
+                    onManualEntry = { manualEntry = it },
+                    initialBarcode = barcode,
+                )
+            } else {
+                assertEquals(barcode, entered)
+                Text("Manual editor")
+            }
+        }
+    }
+}

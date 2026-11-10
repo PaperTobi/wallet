@@ -8,18 +8,24 @@ import android.database.MatrixCursor
 import android.net.Uri
 import android.util.Log
 import androidx.compose.ui.graphics.toArgb
+import androidx.room3.InvalidationTracker
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
 import dagger.hilt.android.EntryPointAccessors
 import dagger.hilt.components.SingletonComponent
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.runBlocking
 import nz.eloque.foss_wallet.BuildConfig
 import nz.eloque.foss_wallet.model.PassTagCrossRef
 import nz.eloque.foss_wallet.model.PassWithMetadata
 import nz.eloque.foss_wallet.model.Tag
 import nz.eloque.foss_wallet.persistence.SettingsStore
+import nz.eloque.foss_wallet.persistence.WalletDb
 import nz.eloque.foss_wallet.persistence.pass.PassRepository
 import nz.eloque.foss_wallet.persistence.tag.TagRepository
 import java.time.Instant
@@ -32,6 +38,8 @@ interface ProviderEntrypoint {
     fun settingsStore(): SettingsStore
 
     fun tagRepository(): TagRepository
+
+    fun walletDb(): WalletDb
 }
 
 class CatimaContentProvider : ContentProvider() {
@@ -44,6 +52,10 @@ class CatimaContentProvider : ContentProvider() {
         private const val URI_CARDS = 1
         private const val URI_GROUPS = 2
         private const val URI_CARD_GROUPS = 3
+
+        val CARDS_URI: Uri = Uri.parse("content://$AUTHORITY/cards")
+        val GROUPS_URI: Uri = Uri.parse("content://$AUTHORITY/groups")
+        val CARD_GROUPS_URI: Uri = Uri.parse("content://$AUTHORITY/card_groups")
 
         private val uriMatcher: UriMatcher =
             object : UriMatcher(NO_MATCH) {
@@ -60,7 +72,7 @@ class CatimaContentProvider : ContentProvider() {
         const val MAJOR_COLUMN: String = "major"
         const val MINOR_COLUMN: String = "minor"
         const val MAJOR: Int = 1
-        const val MINOR: Int = 1
+        const val MINOR: Int = 2
     }
 
     object CatimaFields {
@@ -100,6 +112,7 @@ class CatimaContentProvider : ContentProvider() {
             )
     }
 
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     private lateinit var passRepository: PassRepository
     private lateinit var tagRepository: TagRepository
     private lateinit var settingsStore: SettingsStore
@@ -114,8 +127,24 @@ class CatimaContentProvider : ContentProvider() {
         tagRepository = entryPoint.tagRepository()
         settingsStore = entryPoint.settingsStore()
 
+        val invalidationTracker = entryPoint.walletDb().invalidationTracker
+        invalidationTracker.notifyOnChange(CARDS_URI, "Pass", "PassMetadata")
+        invalidationTracker.notifyOnChange(GROUPS_URI, "tag")
+        invalidationTracker.notifyOnChange(CARD_GROUPS_URI, "PassTag")
+
         return true
     }
+
+    private fun InvalidationTracker.notifyOnChange(
+        uri: Uri,
+        vararg tables: String,
+    ) {
+        createFlow(*tables, emitInitialState = false)
+            .onEach { context?.contentResolver?.notifyChange(uri, null) }
+            .launchIn(scope)
+    }
+
+    private fun Cursor.notifying(uri: Uri): Cursor = apply { setNotificationUri(context!!.contentResolver, uri) }
 
     override fun query(
         uri: Uri,
@@ -135,7 +164,7 @@ class CatimaContentProvider : ContentProvider() {
                         passRepository.all().first()
                     }
 
-                return buildPassesCursor(passes, projection ?: CatimaFields.defaultProjection)
+                return buildPassesCursor(passes, projection ?: CatimaFields.defaultProjection).notifying(CARDS_URI)
             }
 
             URI_GROUPS -> {
@@ -144,7 +173,7 @@ class CatimaContentProvider : ContentProvider() {
                         tagRepository.all().first()
                     }
 
-                return buildTagsCursor(tags)
+                return buildTagsCursor(tags).notifying(GROUPS_URI)
             }
 
             URI_CARD_GROUPS -> {
@@ -153,7 +182,7 @@ class CatimaContentProvider : ContentProvider() {
                         tagRepository.crossRef()
                     }
 
-                return buildCrossRefCursor(crossRefs)
+                return buildCrossRefCursor(crossRefs).notifying(CARD_GROUPS_URI)
             }
 
             else -> {
@@ -229,7 +258,7 @@ class CatimaContentProvider : ContentProvider() {
         crossRefs.forEach { crossRef ->
             cursor
                 .newRow()
-                .add("cardId", crossRef.passId)
+                .add("cardId", crossRef.passId.hashCode())
                 .add("groupId", crossRef.tagLabel)
         }
         return cursor

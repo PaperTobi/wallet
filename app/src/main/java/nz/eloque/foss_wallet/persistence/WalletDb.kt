@@ -1,11 +1,12 @@
 package nz.eloque.foss_wallet.persistence
 
 import android.content.Context
-import androidx.room.AutoMigration
-import androidx.room.Database
-import androidx.room.Room
-import androidx.room.RoomDatabase
-import androidx.room.TypeConverters
+import androidx.room3.AutoMigration
+import androidx.room3.ColumnTypeConverters
+import androidx.room3.Database
+import androidx.room3.Room
+import androidx.room3.RoomDatabase
+import androidx.sqlite.driver.AndroidSQLiteDriver
 import nz.eloque.foss_wallet.model.Attachment
 import nz.eloque.foss_wallet.model.Pass
 import nz.eloque.foss_wallet.model.PassGroup
@@ -16,6 +17,7 @@ import nz.eloque.foss_wallet.model.Tag
 import nz.eloque.foss_wallet.persistence.localization.PassLocalizationDao
 import nz.eloque.foss_wallet.persistence.migrations.M14_15
 import nz.eloque.foss_wallet.persistence.migrations.M20_21
+import nz.eloque.foss_wallet.persistence.migrations.M30_31
 import nz.eloque.foss_wallet.persistence.migrations.M_17_18
 import nz.eloque.foss_wallet.persistence.migrations.M_18_19
 import nz.eloque.foss_wallet.persistence.migrations.M_19_20
@@ -34,10 +36,11 @@ fun buildDb(context: Context) =
         .addMigrations(M_19_20)
         .addMigrations(M_23_24)
         .addMigrations(M_26_27)
+        .setDriver(AndroidSQLiteDriver())
         .build()
 
 @Database(
-    version = 29,
+    version = 31,
     entities = [
         Pass::class, PassMetadata::class, PassLocalization::class, PassGroup::class, Tag::class, PassTagCrossRef::class, Attachment::class,
     ],
@@ -61,10 +64,12 @@ fun buildDb(context: Context) =
         AutoMigration(from = 25, to = 26),
         AutoMigration(from = 27, to = 28),
         AutoMigration(from = 28, to = 29),
+        AutoMigration(from = 29, to = 30),
+        AutoMigration(from = 30, to = 31, spec = M30_31::class),
     ],
     exportSchema = true,
 )
-@TypeConverters(nz.eloque.foss_wallet.persistence.TypeConverters::class)
+@ColumnTypeConverters(nz.eloque.foss_wallet.persistence.TypeConverters::class)
 abstract class WalletDb : RoomDatabase() {
     abstract fun passDao(): PassDao
 

@@ -59,7 +59,6 @@
     <string name="filter">Сортировать по</string>
     <string name="wallet">Кошелёк</string>
     <string name="libraries">Библиотеки</string>
-    <string name="compatibility_mode">Режим совместимости</string>
     <string name="barcode_position_bottom">Внизу</string>
     <string name="pass_deleted">Пропуск удалён</string>
     <string name="pass_imported">Пропуск импортирован</string>
@@ -78,7 +77,6 @@
     <string name="no_url_in_clipboard">Нет ссылки в буфере обмена</string>
     <string name="barcode_value_invalid">Данное значение не является правильным кодом %1$s</string>
     <string name="help_translate">Улучшить перевод</string>
-    <string name="choose_image">Выберите изображение</string>
     <string name="clear_selection">Очистить выбор</string>
     <string name="color">Цвет</string>
     <string name="add_tag">Добавить метку</string>
@@ -87,7 +85,6 @@
     <string name="collapse">Свернуть</string>
     <string name="expand">Развернуть</string>
     <string name="select_image_with_barcode">Выбрать изображение с штрих-кодом</string>
-    <string name="no_barcode_found">Штрих-код не найден</string>
     <string name="no_map_app_found">Карты не найдены</string>
     <string name="no_calendar_app_found">Календарь не найден</string>
     <string name="delete_confirmation_message">Удалить выбранные пропуска? Это действие не может быть отменено.</string>

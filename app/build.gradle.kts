@@ -47,8 +47,8 @@ android {
         applicationId = "com.fivius.wallet"
         minSdk = 28
         targetSdk = 37
-        versionCode = 7
-        versionName = "0.0.7"
+        versionCode = 122
+        versionName = "0.52.0"
         vectorDrawables {
             useSupportLibrary = true
         }
@@ -87,7 +87,7 @@ aboutLibraries {
     offlineMode = true
 }
 
-room {
+room3 {
     schemaDirectory("$projectDir/schemas")
 }
 
@@ -122,14 +122,16 @@ dependencies {
     implementation(libs.accompanist.permissions)
 
     // navigation
-    implementation(libs.androidx.navigation.compose)
+    implementation(libs.androidx.navigation3.runtime)
+    implementation(libs.androidx.navigation3.ui)
+    implementation(libs.androidx.lifecycle.viewmodel.navigation3)
     implementation(libs.kotlinx.serialization.core)
-    implementation(libs.androidx.hilt.navigation.compose)
+    implementation(libs.androidx.hilt.lifecycle.viewmodel.compose)
 
     implementation(libs.androidx.room.runtime)
     ksp(libs.androidx.room.compiler)
-    implementation(libs.androidx.room.ktx)
-    testImplementation(libs.androidx.room.testing)
+    implementation(libs.androidx.sqlite.async)
+    implementation(libs.androidx.sqlite.framework)
 
     implementation(libs.coil)
     implementation(libs.coil.compose)
@@ -148,7 +150,8 @@ dependencies {
     ksp(libs.androidx.hilt.compiler)
 
     // http requests
-    implementation(libs.okhttp)
+    implementation(libs.ktor.client.core)
+    implementation(libs.ktor.client.okhttp)
 
     implementation(libs.androidx.hilt.work)
 

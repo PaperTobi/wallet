@@ -1,16 +1,16 @@
 package nz.eloque.foss_wallet.model
 
 import android.content.Context
-import android.location.Location
-import androidx.room.ColumnInfo
-import androidx.room.Entity
-import androidx.room.PrimaryKey
+import androidx.room3.ColumnInfo
+import androidx.room3.Entity
+import androidx.room3.PrimaryKey
 import nz.eloque.foss_wallet.model.field.PassField
 import nz.eloque.foss_wallet.utils.inIgnoreCase
 import java.io.File
 import java.time.Instant
 import java.time.ZonedDateTime
 import java.util.LinkedList
+import java.util.Locale
 import java.util.UUID
 
 @Entity(tableName = "Pass")
@@ -37,18 +37,28 @@ data class Pass(
     val colors: PassColors? = null,
     val relevantDates: List<PassRelevantDate> = LinkedList(),
     val expirationDate: ZonedDateTime? = null,
+    @ColumnInfo(defaultValue = "0")
+    val voided: Boolean = false,
     val logoText: String? = null,
     val authToken: String? = null,
     val webServiceUrl: String? = null,
     val passTypeIdentifier: String? = null,
-    val locations: List<Location> = LinkedList(),
+    val locations: List<PassLocation> = LinkedList(),
+    @ColumnInfo(defaultValue = "[]")
+    val beacons: List<PassBeacon> = LinkedList(),
+    val maxDistance: Double? = null,
+    /** Action URLs, emails and phone numbers, keyed by their pass.json key such as `transferURL`. */
+    @ColumnInfo(defaultValue = "{}")
+    val links: Map<String, String> = emptyMap(),
     val headerFields: List<PassField> = LinkedList(),
     val primaryFields: List<PassField> = LinkedList(),
     val secondaryFields: List<PassField> = LinkedList(),
     val auxiliaryFields: List<PassField> = LinkedList(),
     val backFields: List<PassField> = LinkedList(),
+    @ColumnInfo(defaultValue = "[]")
+    val additionalInfoFields: List<PassField> = LinkedList(),
 ) {
-    fun iconFile(context: Context): File = coilImageModel(context, "icon", true)!!
+    fun iconFile(context: Context): File? = coilImageModel(context, "icon", true) ?: logoFile(context)
 
     fun logoFile(context: Context): File? = coilImageModel(context, "logo", hasLogo)
 
@@ -73,7 +83,10 @@ data class Pass(
             else -> false
         }
 
-    fun allFields(): List<PassField> = headerFields + primaryFields + secondaryFields + auxiliaryFields + backFields
+    /** Auxiliary fields split into the event ticket rows 0 and 1, without empty rows. */
+    fun auxiliaryRows(): List<List<PassField>> = auxiliaryFields.partition { it.row != 1 }.toList().filter { it.isNotEmpty() }
+
+    fun allFields(): List<PassField> = headerFields + primaryFields + secondaryFields + auxiliaryFields + backFields + additionalInfoFields
 
     fun updatedFields(oldPass: Pass): List<PassField> {
         val myFields = this.allFields()
@@ -97,21 +110,24 @@ data class Pass(
         context: Context,
         type: String,
         exists: Boolean,
-    ): File? = if (exists) File(context.filesDir, "$id/$type.png") else null
+    ): File? = if (exists) resolveImage(File(context.filesDir, id), type, Locale.getDefault().toLanguageTag()) else null
 
     fun originalPassFile(context: Context): File? {
         val file = File(context.filesDir, "$id/${OriginalPass.FILE_PATH}")
         return if (file.exists()) file else null
     }
 
+    fun withImages(images: PassImages): Pass =
+        copy(
+            hasLogo = images.has("logo"),
+            hasStrip = images.has("strip"),
+            hasThumbnail = images.has("thumbnail"),
+            hasFooter = images.has("footer"),
+            hasBackground = images.has("background"),
+        )
+
     fun deleteFiles(context: Context) {
-        iconFile(context).delete()
-        logoFile(context)?.delete()
-        stripFile(context)?.delete()
-        thumbnailFile(context)?.delete()
-        footerFile(context)?.delete()
-        backgroundFile(context)?.delete()
-        File(context.filesDir, id).delete()
+        File(context.filesDir, id).deleteRecursively()
     }
 
     companion object {

@@ -10,11 +10,11 @@ import nz.eloque.foss_wallet.model.LocalizedPassWithTags
 import nz.eloque.foss_wallet.model.OriginalPass
 import nz.eloque.foss_wallet.model.Pass
 import nz.eloque.foss_wallet.model.PassGroup
+import nz.eloque.foss_wallet.model.PassImages
 import nz.eloque.foss_wallet.model.PassMetadata
 import nz.eloque.foss_wallet.model.PassTagCrossRef
 import nz.eloque.foss_wallet.model.PassWithMetadata
 import nz.eloque.foss_wallet.model.Tag
-import nz.eloque.foss_wallet.persistence.loader.PassBitmaps
 import java.time.Instant
 import java.util.Locale
 
@@ -25,6 +25,8 @@ class PassRepository
         private val passDao: PassDao,
     ) {
         fun all(): Flow<List<PassWithMetadata>> = passDao.all()
+
+        suspend fun allPasses(): List<Pass> = passDao.allPasses()
 
         suspend fun updatable(): List<Pass> = passDao.allPasses().filter { it.updatable() }
 
@@ -37,12 +39,13 @@ class PassRepository
             }
 
         fun flowById(id: String): Flow<LocalizedPassWithTags?> =
-            passDao.flowById(id).map { it?.applyLocalization(Locale.getDefault().language) }
+            passDao.flowById(id).map { it?.applyLocalization(Locale.getDefault().toLanguageTag()) }
 
-        fun findById(id: String): LocalizedPassWithTags? = passDao.findById(id)?.applyLocalization(Locale.getDefault().language)
+        suspend fun findById(id: String): LocalizedPassWithTags? =
+            passDao.findById(id)?.applyLocalization(Locale.getDefault().toLanguageTag())
 
         fun flowByGroup(groupId: Long): Flow<List<LocalizedPassWithTags>> =
-            passDao.flowByGroup(groupId).map { passes -> passes.map { it.applyLocalization(Locale.getDefault().language) } }
+            passDao.flowByGroup(groupId).map { passes -> passes.map { it.applyLocalization(Locale.getDefault().toLanguageTag()) } }
 
         suspend fun associate(
             pass: Pass,
@@ -61,16 +64,17 @@ class PassRepository
 
         suspend fun insert(
             pass: Pass,
-            bitmaps: PassBitmaps,
+            images: PassImages,
             originalPass: OriginalPass?,
         ) {
             val id = pass.id
             val metadata = passDao.metadata(id) ?: PassMetadata(id)
-            val archived = AutoArchiver.shouldBeAutoArchived(pass, metadata)
+            val archived = AutoArchiver.shouldBeAutoArchived(pass, metadata, passDao.findById(id)?.pass)
+            // Files must exist before the row is written, since observers resolve image paths on emission.
+            images.saveToDisk(context, id)
+            originalPass?.saveToDisk(context, id)
             passDao.insert(pass)
             passDao.insert(metadata.copy(archived = archived))
-            bitmaps.saveToDisk(context, id)
-            originalPass?.saveToDisk(context, id)
         }
 
         suspend fun insertAttachment(
@@ -83,7 +87,7 @@ class PassRepository
             passDao.insert(attachment)
         }
 
-        fun insert(group: PassGroup): PassGroup {
+        suspend fun insert(group: PassGroup): PassGroup {
             val id = passDao.insert(group)
             return group.copy(id = id)
         }
@@ -124,8 +128,6 @@ class PassRepository
         suspend fun isRegistered(pass: Pass): Boolean = passDao.metadata(pass.id)?.registeredDeviceId == pass.deviceId
 
         suspend fun setRegistered(pass: Pass) = passDao.setRegisteredDeviceId(pass.id, pass.deviceId)
-
-        suspend fun toggleLegacyRendering(pass: Pass) = passDao.toggleLegacyRendering(pass.id)
 
         suspend fun archiveExpiredPasses(now: Instant = Instant.now()) {
             passDao
